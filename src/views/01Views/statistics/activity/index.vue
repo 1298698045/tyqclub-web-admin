@@ -1,27 +1,30 @@
 <template>
   <div class="analysis-container">
-    <!-- 数据概览 -->
+    <div class="tabs">
+      <button
+        v-for="(tab, index) in tabs"
+        :key="index"
+        :class="{ active: activeTab === tab }"
+        @click="activeTab = tab"
+      >
+        {{ tab }}
+      </button>
+    </div>
     <div class="overview-cards">
-      <div v-for="(item, index) in overviewData" :key="index" class="card">
+      <div v-for="(item, index) in overviewData[activeTab]" :key="index" class="card">
         <h3>{{ item.title }}</h3>
         <p>{{ item.value }}</p>
       </div>
     </div>
 
-    <!-- 图表部分 -->
     <div class="charts">
-      <!-- 报名人数与参与人数对比柱状图 -->
       <div id="barChart" class="chart" />
-
-      <!-- 消费金额趋势折线图 -->
       <div id="lineChart" class="chart" />
     </div>
-
-    <!-- 数据表格 -->
     <table class="data-table">
       <thead>
         <tr>
-          <th>活动名称</th>
+          <th>名称</th>
           <th>报名人数</th>
           <th>参与人数</th>
           <th>消费金额</th>
@@ -29,7 +32,7 @@
         </tr>
       </thead>
       <tbody>
-        <tr v-for="(row, index) in tableData" :key="index">
+        <tr v-for="(row, index) in tableData[activeTab]" :key="index">
           <td>{{ row.name }}</td>
           <td>{{ row.signUp }}</td>
           <td>{{ row.participate }}</td>
@@ -47,34 +50,66 @@ import echarts from 'echarts'
 export default {
   data() {
     return {
-      overviewData: [
-        { title: '总报名人数', value: 5000 },
-        { title: '总参与人数', value: 4500 },
-        { title: '总消费金额', value: '￥1,200,000' }
-      ],
-      tableData: [
-        { name: '摄影讲座', signUp: 150, participate: 140, amount: 3000 },
-        { name: '羽毛球比赛', signUp: 200, participate: 180, amount: 5000 },
-        { name: '文化之旅', signUp: 300, participate: 270, amount: 8000 }
-      ]
+      tabs: ['活动', '课程', '旅游'],
+      activeTab: '活动',
+      overviewData: {
+        活动: [
+          { title: '活动总数', value: 10 },
+          { title: '报名人数', value: 2000 },
+          { title: '消费金额', value: '￥300,000' }
+        ],
+        课程: [
+          { title: '课程总数', value: 5 },
+          { title: '报名人数', value: 1000 },
+          { title: '消费金额', value: '￥150,000' }
+        ],
+        旅游: [
+          { title: '旅游总数', value: 3 },
+          { title: '报名人数', value: 500 },
+          { title: '消费金额', value: '￥200,000' }
+        ]
+      },
+      tableData: {
+        活动: [
+          { name: '摄影讲座', signUp: 150, participate: 140, amount: 3000 },
+          { name: '羽毛球比赛', signUp: 200, participate: 180, amount: 5000 }
+        ],
+        课程: [
+          { name: '艺术课程', signUp: 100, participate: 90, amount: 2000 },
+          { name: '语言课程', signUp: 200, participate: 180, amount: 4000 }
+        ],
+        旅游: [
+          { name: '文化之旅', signUp: 300, participate: 270, amount: 8000 },
+          { name: '探险之旅', signUp: 200, participate: 180, amount: 7000 }
+        ]
+      }
+    }
+  },
+  watch: {
+    activeTab() {
+      this.initCharts()
     }
   },
   mounted() {
-    this.initBarChart()
-    this.initLineChart()
+    this.initCharts()
   },
   methods: {
+    initCharts() {
+      this.initBarChart()
+      this.initLineChart()
+    },
     initBarChart() {
       const barChart = echarts.init(document.getElementById('barChart'))
+      const currentData = this.tableData[this.activeTab]
       const option = {
-        title: { text: '报名人数与参与人数对比' },
+        title: { text: `${this.activeTab}报名人数与参与人数对比` },
         tooltip: {},
         legend: { data: ['报名人数', '参与人数'] },
-        xAxis: { data: ['摄影讲座', '羽毛球比赛', '文化之旅'] },
+        xAxis: { data: currentData.map(item => item.name) },
         yAxis: {},
         series: [
-          { name: '报名人数', type: 'bar', data: [150, 200, 300] },
-          { name: '参与人数', type: 'bar', data: [140, 180, 270] }
+          { name: '报名人数', type: 'bar', data: currentData.map(item => item.signUp) },
+          { name: '参与人数', type: 'bar', data: currentData.map(item => item.participate) }
         ]
       }
       barChart.setOption(option)
@@ -82,7 +117,7 @@ export default {
     initLineChart() {
       const lineChart = echarts.init(document.getElementById('lineChart'))
       const option = {
-        title: { text: '消费金额趋势' },
+        title: { text: `${this.activeTab}消费金额趋势` },
         tooltip: { trigger: 'axis' },
         xAxis: { type: 'category', data: ['1月', '2月', '3月'] },
         yAxis: { type: 'value' },
@@ -100,6 +135,25 @@ export default {
   .analysis-container {
     padding: 20px;
     font-family: Arial, sans-serif;
+  }
+
+  .tabs {
+    display: flex;
+    margin-bottom: 20px;
+  }
+
+  .tabs button {
+    margin-right: 10px;
+    padding: 10px 20px;
+    border: none;
+    background-color: #f5f5f5;
+    cursor: pointer;
+    border-radius: 4px;
+  }
+
+  .tabs button.active {
+    background-color: #1890ff;
+    color: #fff;
   }
 
   .overview-cards {
