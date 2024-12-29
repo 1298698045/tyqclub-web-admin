@@ -1,310 +1,153 @@
 <template>
-  <div class="wrapper">
-    <div class="form">
-      <div class="form-item">
-        <div class="form-item-label">
-          日期
-        </div>
-        <div class="form-item-field">
-          <el-date-picker
-            v-model="date"
-            type="date"
-            format="yyyy-MM-dd"
-            value-format="yyyy-MM-dd"
-            placeholder="选择日期"
-          />
-        </div>
+  <div class="analysis-container">
+    <!-- 数据概览 -->
+    <div class="overview-cards">
+      <div v-for="(item, index) in overviewData" :key="index" class="card">
+        <h3>{{ item.title }}</h3>
+        <p>{{ item.value }}</p>
       </div>
     </div>
-    <div class="statistics-wrap">
-      <div class="statisticsPanel">
-        <div class="left-box">
-          <div class="module-img">
-            <img src="@/assets/img/logo2.jpg" alt="">
-          </div>
-        </div>
-        <div class="right-box">
-          <div class="number">
-            100
-          </div>
-          <div class="label">会员数量</div>
-        </div>
-      </div>
-      <div class="statisticsPanel chartItem">
-        <div>
-          <div class="title">年龄分布</div>
-          <div id="chart-age" class="chartBox" />
-        </div>
-      </div>
-      <div class="statisticsPanel chartItem">
-        <div>
-          <div class="title">性别比例</div>
-          <div id="chart-gender" class="chartBox" />
-        </div>
-      </div>
-      <div class="statisticsPanel chartItem">
-        <div>
-          <div class="title">报名数量</div>
-          <div id="chart-sign" class="chartBox" />
-        </div>
-      </div>
-      <!-- <div class="statisticsPanel">
-          <div class="left-box">
-            <div class="module-img">
-              <img src="@/assets/img/logo2.jpg" alt="">
-            </div>
-          </div>
-          <div class="right-box">
-            <div class="number">
-              100
-            </div>
-            <div class="label">性别比例</div>
-          </div>
-        </div>
-        <div class="statisticsPanel">
-          <div class="left-box">
-            <div class="module-img">
-              <img src="@/assets/img/logo2.jpg" alt="">
-            </div>
-          </div>
-          <div class="right-box">
-            <div class="number">
-              100
-            </div>
-            <div class="label">报名数量</div>
-          </div>
-        </div> -->
+
+    <!-- 图表部分 -->
+    <div class="charts">
+      <!-- 报名人数与参与人数对比柱状图 -->
+      <div id="barChart" class="chart" />
+
+      <!-- 消费金额趋势折线图 -->
+      <div id="lineChart" class="chart" />
     </div>
+
+    <!-- 数据表格 -->
+    <table class="data-table">
+      <thead>
+        <tr>
+          <th>活动名称</th>
+          <th>报名人数</th>
+          <th>参与人数</th>
+          <th>消费金额</th>
+          <th>转化率</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr v-for="(row, index) in tableData" :key="index">
+          <td>{{ row.name }}</td>
+          <td>{{ row.signUp }}</td>
+          <td>{{ row.participate }}</td>
+          <td>￥{{ row.amount }}</td>
+          <td>{{ ((row.participate / row.signUp) * 100).toFixed(1) }}%</td>
+        </tr>
+      </tbody>
+    </table>
   </div>
 </template>
+
 <script>
-import * as echarts from 'echarts'
+import echarts from 'echarts'
+
 export default {
   data() {
     return {
-      date: ''
+      overviewData: [
+        { title: '总报名人数', value: 5000 },
+        { title: '总参与人数', value: 4500 },
+        { title: '总消费金额', value: '￥1,200,000' }
+      ],
+      tableData: [
+        { name: '摄影讲座', signUp: 150, participate: 140, amount: 3000 },
+        { name: '羽毛球比赛', signUp: 200, participate: 180, amount: 5000 },
+        { name: '文化之旅', signUp: 300, participate: 270, amount: 8000 }
+      ]
     }
   },
-  created() {
-
-  },
   mounted() {
-    this.$nextTick(() => {
-      this.getAgeChart()
-      this.getGenderChart()
-      this.getSignChart()
-    })
+    this.initBarChart()
+    this.initLineChart()
   },
   methods: {
-    getAgeChart() {
-      const chartDom = document.getElementById('chart-age')
-      var myChart = echarts.init(chartDom)
-      var option
-      option = {
-        tooltip: {
-          trigger: 'item'
-        },
-        legend: {
-          orient: 'vertical',
-          right: '0%',
-          data: ['18', '20']
-        },
-        color: ['#3399ff', 'pink'],
+    initBarChart() {
+      const barChart = echarts.init(document.getElementById('barChart'))
+      const option = {
+        title: { text: '报名人数与参与人数对比' },
+        tooltip: {},
+        legend: { data: ['报名人数', '参与人数'] },
+        xAxis: { data: ['摄影讲座', '羽毛球比赛', '文化之旅'] },
+        yAxis: {},
         series: [
-          {
-            name: '年龄',
-            type: 'pie',
-            radius: ['40%', '70%'],
-            avoidLabelOverlap: false,
-            label: {
-              show: false,
-              position: 'center'
-            },
-            emphasis: {
-              label: {
-                show: true,
-                fontSize: 40,
-                fontWeight: 'bold'
-              }
-            },
-            labelLine: {
-              show: false
-            },
-            data: [
-              { value: 18, name: '18' },
-              { value: 10, name: '20' }
-            ]
-          }
+          { name: '报名人数', type: 'bar', data: [150, 200, 300] },
+          { name: '参与人数', type: 'bar', data: [140, 180, 270] }
         ]
       }
-
-      option && myChart.setOption(option)
+      barChart.setOption(option)
     },
-    getGenderChart() {
-      const chartDom = document.getElementById('chart-gender')
-      var myChart = echarts.init(chartDom)
-      var option
-      option = {
-        tooltip: {
-          trigger: 'item'
-        },
-        legend: {
-          orient: 'vertical',
-          right: '0%',
-          data: ['男', '女']
-        },
-        color: ['blue', 'pink'],
+    initLineChart() {
+      const lineChart = echarts.init(document.getElementById('lineChart'))
+      const option = {
+        title: { text: '消费金额趋势' },
+        tooltip: { trigger: 'axis' },
+        xAxis: { type: 'category', data: ['1月', '2月', '3月'] },
+        yAxis: { type: 'value' },
         series: [
-          {
-            name: '性别',
-            type: 'pie',
-            radius: ['40%', '70%'],
-            avoidLabelOverlap: false,
-            label: {
-              show: false,
-              position: 'center'
-            },
-            emphasis: {
-              label: {
-                show: true,
-                fontSize: 40,
-                fontWeight: 'bold'
-              }
-            },
-            labelLine: {
-              show: false
-            },
-            data: [
-              { value: 18, name: '男' },
-              { value: 10, name: '女' }
-            ]
-          }
+          { name: '消费金额', type: 'line', data: [12000, 15000, 20000] }
         ]
       }
-
-      option && myChart.setOption(option)
-    },
-    getSignChart() {
-      const chartDom = document.getElementById('chart-sign')
-      var myChart = echarts.init(chartDom)
-      var option
-      option = {
-        tooltip: {
-          trigger: 'item'
-        },
-        legend: {
-          orient: 'vertical',
-          right: '0%',
-          data: ['活动', '课程', '旅游']
-        },
-        series: [
-          {
-            name: '报名数量',
-            type: 'pie',
-            radius: ['40%', '70%'],
-            avoidLabelOverlap: false,
-            label: {
-              show: false,
-              position: 'center'
-            },
-            emphasis: {
-              label: {
-                show: true,
-                fontSize: 40,
-                fontWeight: 'bold'
-              }
-            },
-            labelLine: {
-              show: false
-            },
-            data: [
-              { value: 18, name: '活动' },
-              { value: 10, name: '课程' },
-              { value: 10, name: '旅游' }
-            ]
-          }
-        ]
-      }
-
-      option && myChart.setOption(option)
+      lineChart.setOption(option)
     }
   }
 }
 </script>
-  <style lang="scss">
-    .wrapper {
-      width: 100%;
-      min-height: calc(100vh - 84px);
-      background: #f4f4f4;
 
-      .statistics-wrap {
-        display: flex;
-        padding: 10px 0 10px 10px;
-      }
+  <style scoped>
+  .analysis-container {
+    padding: 20px;
+    font-family: Arial, sans-serif;
+  }
 
-      .statisticsPanel {
-        width: calc(25% - 10px);
-        height: 200px;
-        background: #fff;
-        box-shadow: rgba(0, 0, 0, 0.05882353) 0px 3px 6px 2px;
-        border-radius: 4px;
-        display: flex;
-        align-items: center;
-        justify-content: space-between;
-        margin-right: 10px;
-        padding: 20px;
+  .overview-cards {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 20px;
+  }
 
-        &:nth-child(4n) {
-          margin-right: 0;
-        }
+  .card {
+    flex: 1;
+    margin: 0 10px;
+    padding: 20px;
+    background-color: #f5f5f5;
+    text-align: center;
+    border-radius: 8px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  }
 
-        .label {
-          color: #666666;
-        }
+  .charts {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 20px;
+  }
 
-        .left-box {
-          margin-right: 20px;
-        }
+  .chart {
+    flex: 1;
+    margin: 0 10px;
+    height: 400px;
+    background-color: #fff;
+    border: 1px solid #ddd;
+    border-radius: 8px;
+  }
 
-        .module-img {
-          width: 100px;
-          height: 100px;
-          border-radius: 50%;
+  .data-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 20px;
+  }
 
-          img {
-            width: 100%;
-            height: 100%;
-            border-radius: 50%;
-            object-fit: cover;
-          }
-        }
+  .data-table th,
+  .data-table td {
+    padding: 10px;
+    border: 1px solid #ddd;
+    text-align: center;
+  }
 
-        .number {
-          font-size: 30px;
-          color: #2f5aa5;
-          font-weight: 500;
-        }
-      }
-    }
-    .statisticsPanel.chartItem{
-      display: block;
-      .title{
-        color: #666666;
-      }
-    }
-    .chartBox{
-      width: 300px;
-      height: 150px;
-    }
-    .form{
-      padding: 0 10px;
-      .form-item{
-        display: flex;
-        align-items: center;
-        padding: 10px 0;
-        .form-item-label{
-          margin-right: 10px;
-        }
-      }
-    }
+  .data-table th {
+    background-color: #f5f5f5;
+    font-weight: bold;
+  }
   </style>
